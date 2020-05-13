@@ -292,7 +292,7 @@ def display(whitelist, blacklist):
     for i in range(8):
         board.append([])
         for j in range(8):
-            board[i].append(['  '])
+            board[i].append([' '])
 
             # Iterate white pieces, check if spot == coordinate
             for item in whites:
@@ -305,8 +305,8 @@ def display(whitelist, blacklist):
                     board[i][j] = item.name
 
     # Print board to terminal
-    print('      1      2      3      4      5      6      7      8')
-    letters = 'abcdefjg'
+    print('    1      2      3      4      5      6      7      8')
+    letters = 'abcdefgh'
     for i in range(8):
         print(letters[i], board[i])
         
