@@ -1,3 +1,5 @@
+import copy
+
 class Chesspiece:
 
     spots = [a + str(i) for i in range(1, 9) for a in 'abcdefgh']
@@ -6,10 +8,11 @@ class Chesspiece:
     whiteobjlist = []
     blackobjlist = []
 
-    def __init__(self, color, piece, spot):
+    def __init__(self, color, piece, spot, name):
         self.color = color
         self.piece = piece
         self.spot = spot
+        self.name = name
         if color == 'white':
             Chesspiece.whitespotlist.append(self.spot)
             Chesspiece.whiteobjlist.append(self)
@@ -258,39 +261,91 @@ def ischeckmate(kingobj):
     return True
 
 
-pa1 = Chesspiece('white', 'pawn', 'a2')
-pa2 = Chesspiece('white', 'pawn', 'b2')
-pa3 = Chesspiece('white', 'pawn', 'c2')
-pa4 = Chesspiece('white', 'pawn', 'd2')
-pa5 = Chesspiece('white', 'pawn', 'e2')
-pa6 = Chesspiece('white', 'pawn', 'f2')
-pa7 = Chesspiece('white', 'pawn', 'g2')
-pa8 = Chesspiece('white', 'pawn', 'h2')
-ro1 = Chesspiece('white', 'rook', 'a1')
-ro2 = Chesspiece('white', 'rook', 'h1')
-kn1 = Chesspiece('white', 'knight', 'b1')
-kn2 = Chesspiece('white', 'knight', 'g1')
-bi1 = Chesspiece('white', 'bishop', 'c1')
-bi2 = Chesspiece('white', 'bishop', 'f1')
-qu1 = Chesspiece('white', 'queen', 'd1')
-ki1 = Chesspiece('white', 'king', 'e1')
+'''
+Converts chess coordinates to indexes
+'''
+def convert(whiteobjlist, blackobjlist):
 
-pa9 = Chesspiece('black', 'pawn', 'a7')
-pa10 = Chesspiece('black', 'pawn', 'b7')
-pa11 = Chesspiece('black', 'pawn', 'c7')
-pa12 = Chesspiece('black', 'pawn', 'd7')
-pa13 = Chesspiece('black', 'pawn', 'e7')
-pa14 = Chesspiece('black', 'pawn', 'f7')
-pa15 = Chesspiece('black', 'pawn', 'g7')
-pa16 = Chesspiece('black', 'pawn', 'h7')
-ro3 = Chesspiece('black', 'rook', 'a8')
-ro4 = Chesspiece('black', 'rook', 'h8')
-kn3 = Chesspiece('black', 'knight', 'b8')
-kn4 = Chesspiece('black', 'knight', 'g8')
-bi3 = Chesspiece('black', 'bishop', 'c8')
-bi4 = Chesspiece('black', 'bishop', 'f8')
-qu2 = Chesspiece('black', 'queen', 'd8')
-ki2 = Chesspiece('black', 'king', 'e8')
+    # Iterate each list and convert to indexes
+    whites = copy.deepcopy(whiteobjlist)
+    blacks = copy.deepcopy(blackobjlist)
+    for square in whites:
+        square.spot = square.spot.upper()
+        square.spot = (ord(square.spot[0]) - 65, int(square.spot[1]) - 1)
+    for square in blacks:
+        square.spot = square.spot.upper()
+        square.spot = (ord(square.spot[0]) - 65, int(square.spot[1]) - 1)
+
+    return whites, blacks
+
+
+'''
+Displays the chessboard to terminal
+'''
+def display(whitelist, blacklist):
+
+    # Retrieve edited board pieces with coordinates
+    whites, blacks = convert(whitelist, blacklist)
+
+    board = []
+    # Iterate through board cells and check if pieces lie there
+    for i in range(8):
+        board.append([])
+        for j in range(8):
+            board[i].append(['  '])
+
+            # Iterate white pieces, check if spot == coordinate
+            for item in whites:
+                if item.spot == (i, j):
+                    board[i][j] = item.name
+
+            # Iterate white pieces, check if spot == coordinate
+            for item in blacks:
+                if item.spot == (i, j):
+                    board[i][j] = item.name
+
+    # Print board to terminal
+    print('      1      2      3      4      5      6      7      8')
+    letters = 'abcdefjg'
+    for i in range(8):
+        print(letters[i], board[i])
+        
+
+
+pa1 = Chesspiece('white', 'pawn', 'a2', 'WP')
+pa2 = Chesspiece('white', 'pawn', 'b2', 'WP')
+pa2 = Chesspiece('white', 'pawn', 'b2', 'WP')
+pa3 = Chesspiece('white', 'pawn', 'c2', 'WP')
+pa4 = Chesspiece('white', 'pawn', 'd2', 'WP')
+pa5 = Chesspiece('white', 'pawn', 'e2', 'WP')
+pa6 = Chesspiece('white', 'pawn', 'f2', 'WP')
+pa7 = Chesspiece('white', 'pawn', 'g2', 'WP')
+pa8 = Chesspiece('white', 'pawn', 'h2', 'WP')
+ro1 = Chesspiece('white', 'rook', 'a1', 'WR')
+ro2 = Chesspiece('white', 'rook', 'h1', 'WR')
+kn1 = Chesspiece('white', 'knight', 'b1', 'WKN')
+kn2 = Chesspiece('white', 'knight', 'g1', 'WKN')
+bi1 = Chesspiece('white', 'bishop', 'c1', 'WB')
+bi2 = Chesspiece('white', 'bishop', 'f1', 'WB')
+qu1 = Chesspiece('white', 'queen', 'd1', 'WQ')
+ki1 = Chesspiece('white', 'king', 'e1', 'WK')
+
+pa9 = Chesspiece('black', 'pawn', 'a7', 'BP')
+pa10 = Chesspiece('black', 'pawn', 'b7', 'BP')
+pa11 = Chesspiece('black', 'pawn', 'c7', 'BP')
+pa12 = Chesspiece('black', 'pawn', 'd7', 'BP')
+pa13 = Chesspiece('black', 'pawn', 'e7', 'BP')
+pa14 = Chesspiece('black', 'pawn', 'f7', 'BP')
+pa15 = Chesspiece('black', 'pawn', 'g7', 'BP')
+pa16 = Chesspiece('black', 'pawn', 'h7', 'BP')
+ro3 = Chesspiece('black', 'rook', 'a8', 'BR')
+ro4 = Chesspiece('black', 'rook', 'h8', 'BR')
+kn3 = Chesspiece('black', 'knight', 'b8', 'BKN')
+kn4 = Chesspiece('black', 'knight', 'g8', 'BKN')
+bi3 = Chesspiece('black', 'bishop', 'c8', 'BB')
+bi4 = Chesspiece('black', 'bishop', 'f8', 'BB')
+qu2 = Chesspiece('black', 'queen', 'd8', 'BQ')
+ki2 = Chesspiece('black', 'king', 'e8', 'BK')
 
 
 def main():
@@ -301,9 +356,15 @@ def main():
     print()
 
     while True:
+
+        # Check white/black turn
         if counter % 2 == 0:
+
+            # Pick piece to move
+            display(Chesspiece.whiteobjlist, Chesspiece.blackobjlist)
             userspot = input('White, enter spot of piece to move: ')
 
+            # If 
             if userspot in Chesspiece.whitespotlist:
                 for instance in Chesspiece.whiteobjlist:
                     if instance.spot == userspot:
@@ -314,6 +375,7 @@ def main():
             while userspot not in Chesspiece.whitespotlist or allmoves == [] or noncheckmoves == []:
                 if userspot not in Chesspiece.whitespotlist:
                     print('No white piece is at ' + userspot + '. Try again:', end=' ')
+                    print('Here is a list of all your pieces:', Chesspiece.whitespotlist)
                 elif allmoves == []:
                     print(instance.color.capitalize(), instance.piece, 'at', instance.spot, 'can not move anywhere. Try again:', end=' ')
                 else:
@@ -358,6 +420,9 @@ def main():
                 print('Checkmate. White wins!')
                 break
         else:
+
+            # Display board, prompt for move
+            display(Chesspiece.whiteobjlist, Chesspiece.blackobjlist)
             userspot = input('Black, enter spot of piece to move: ')
 
             if userspot in Chesspiece.blackspotlist:
@@ -370,6 +435,7 @@ def main():
             while userspot not in Chesspiece.blackspotlist or allmoves == [] or noncheckmoves == []:
                 if userspot not in Chesspiece.blackspotlist:
                     print('No black piece is at ' + userspot + '. Try again:', end=' ')
+                    print('Here is a list of all your pieces: ', Chesspiece.blackspotlist)
                 elif allmoves == []:
                     print(instance.color.capitalize(), instance.piece, 'at', instance.spot, 'can not move anywhere. Try again:', end=' ')
                 else:
@@ -387,6 +453,7 @@ def main():
 
             for instance in Chesspiece.blackobjlist:
                 if instance.spot == userspot:
+
                     print('Where would you like to move', instance.color, instance.piece, 'to?', end=' ')
                     usermove = input()
 
