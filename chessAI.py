@@ -431,19 +431,87 @@ def winner(chess):
 
     return None
 
+def material_score(chess):
+    """
+    Returns total score of pieces per color
+    """
+
+    score = 0
+
+    piece_values = {
+        "pawn": 1,
+        "rook": 5,
+        "knight": 4,
+        "bishop": 4,
+        "queen": 10
+    }
+    pieces = piece_values.keys()
+
+    # Evaluate white misses
+    for piece in chess.whites:
+        if piece.piece in pieces:
+            value = piece_values[piece.piece]
+            score += value
+
+    # Evaluate white misses
+    for piece in chess.blacks:
+        if piece.piece in pieces:
+            value = piece_values[piece.piece]
+            score -= value
+
+    return score
+
+def manhattan_score(chess):
+    """
+    Returns total manhattan distance as score
+    """
+
+    score = 0
+    distance = [
+    [6, 5, 4, 3, 3, 4, 5, 6],
+    [5, 4, 3, 2, 2, 3, 4, 5],
+    [4, 3, 2, 1, 1, 2, 3, 4],
+    [3, 2, 1, 0, 0, 1, 2, 3],
+    [3, 2, 1, 0, 0, 1, 2, 3],
+    [4, 3, 2, 1, 1, 2, 3, 4],
+    [5, 4, 3, 2, 2, 3, 4, 5],
+    [6, 5, 4, 3, 3, 4, 5, 6]
+    ]
+
+    # Total White MD
+    for spot in chess.white_places:
+        x, y = spot
+        value = distance[x][y]
+        score += value
+
+    # Total Black MD
+    for spot in chess.black_places:
+        x, y = spot
+        value = distance[x][y]
+        score -= value
+
+    return score
+
+
 def utility(chess):
     """
     Returns value heuristic of current game state
     """
+
+    score = 0
+
     player = winner(chess)
     # Winner recieves 100 points reward
     if player == "black":
-        return -100
+        return -1000
     elif player == "white":
-        return 100
+        return 1000
 
     # Pieces Heuristic: Whichever color has most pieces is rewarded
-    return len(chess.whites) - len(chess.blacks)
+    score += (manhattan_score(chess) + material_score(chess))
+
+
+    return score
 
 
 
