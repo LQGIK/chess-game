@@ -8,10 +8,10 @@ Functionality equation modified for AI Chessboard representation
 
 def all_spaces(chessboard, piece):
     """
-    Get all actions
+    Get all actions. Takes input of chess coordinates
     """
 
-    piece.spot = chessboard.convertToChessIndex(piece.spot)
+    spot = chessboard.convertToChessIndex(piece.spot)
 
     letters = 'abcdefgh'
     all_list = []
@@ -29,10 +29,10 @@ def all_spaces(chessboard, piece):
     for possibility in piece.moves:
         sublist = []
         
-        splitspot = list(piece.spot)
+        splitspot = list(spot)
         splitspot[1] = int(splitspot[1])
         for move in possibility:
-            lstrindex = letters.find(piece.spot[0])
+            lstrindex = letters.find(spot[0])
             for i in range(int(move[1])):
                 if move[0] == 'U':
                     if splitspot[1] > 7:
@@ -85,16 +85,19 @@ def all_spaces(chessboard, piece):
         for minilist in all_list:
             if len(minilist) == 3:
                 temp_list.append([minilist[-1]])
+
         return temp_list
 
+    # Returns list of moves in chessIndex form
     return all_list
 
 def possible_spaces(chessboard, piece):
     """
-    Returns potential spaces for a given piece. Modified version of chess.poss_spaces()
+    Returns potential spaces for a given piece.\
+    Modified version of chess.poss_spaces(). piece.spot is boardIndex
     """
 
-    # Returns all possible moves for a given piece
+    # Returns all possible moves for a given piece in chess coordinates
     all = all_spaces(chessboard, piece)
     potenspaces = []
     sublistcount = 0
@@ -117,18 +120,18 @@ def possible_spaces(chessboard, piece):
                     if sublistcount > 1:
 
                         # If we can take a black piece diagonally
-                        if place in chessboard.black_places:
-                            potenspaces.append(chessboard.convertToChessIndex(place))
+                        if place in chessboard.black_places and place not in chessboard.white_places:
+                            potenspaces.append(chessboard.convertToBoardIndex(place))
 
                     # Check if coordinate is void of pieces
                     elif place not in chessboard.white_places and place not in chessboard.black_places:
-                        potenspaces.append(chessboard.convertToChessIndex(place))
+                        potenspaces.append(chessboard.convertToBoardIndex(place))
                     else:
                         break
                 
                 # Check if given coordinate is void of other white pieces
                 elif place not in chessboard.white_places:
-                    potenspaces.append(chessboard.convertToChessIndex(place))
+                    potenspaces.append(chessboard.convertToBoardIndex(place))
 
                     # Check for black pieces to take
                     if place in chessboard.black_places:
@@ -142,25 +145,28 @@ def possible_spaces(chessboard, piece):
                 # Pawn mechanics
                 if piece.piece == 'pawn':
                     if sublistcount > 1:
-                        if place in chessboard.white_places:
-                            potenspaces.append(chessboard.convertToChessIndex(place))
 
-                    # 
+                        # Take diagonally
+                        if place in chessboard.white_places and place not in chessboard.black_places:
+                            potenspaces.append(chessboard.convertToBoardIndex(place))
+
+                    # If forward movement is not blocked by any piece, move forward
                     elif place not in chessboard.white_places and place not in chessboard.black_places:
-                        potenspaces.append(chessboard.convertToChessIndex(place))
+                        potenspaces.append(chessboard.convertToBoardIndex(place))
                     else:
                         break
 
                 # Check given coordinate is void of other black pieces
                 elif place not in chessboard.black_places:
-                    potenspaces.append(chessboard.convertToChessIndex(place))
+                    potenspaces.append(chessboard.convertToBoardIndex(place))
 
-                    # Check if white piece can be taken
+                    # Check if white piece is blocking
                     if place in chessboard.white_places:
                         break
                 else:
                     break
 
+    # Returns list of moves in boardIndex form
     return potenspaces
 
 def validify_moves(chessboard, piece):
@@ -171,6 +177,7 @@ def validify_moves(chessboard, piece):
     possible_moves = possible_spaces(chessboard, piece)
     moves = []
     for move in possible_moves:
+
         if not move_cause_check(chessboard, piece, move):
             moves.append(move)
 
@@ -219,7 +226,7 @@ def ischeckmate(chess, king):
 
 def move_cause_check(chessboard, piece, move):
     """
-    Checks if a given move causes a check. Returns boolean
+    Checks if a given move causes a check. Returns boolean. Must be in boardIndex form
     """
     oldspot = chessboard.convertToBoardIndex(piece.spot)
     move = chessboard.convertToBoardIndex(move)
@@ -236,6 +243,7 @@ def move_cause_check(chessboard, piece, move):
             if item.piece == "king":
                 ki1 = item
                 break
+
         # Check if white king is in check
         istherecheck = ischeck(chessboard, ki1)
         if move in chessboard.black_places:
@@ -260,7 +268,7 @@ def move_cause_check(chessboard, piece, move):
         piece.spot = move
 
         # Get king object
-        for item in chessboard.whites:
+        for item in chessboard.blacks:
             if item.piece == "king":
                 ki2 = item
                 break
@@ -340,7 +348,7 @@ def result(chess, action):
         indexWhitePlaces = chess_cpy.white_places.index(boardIndex)
 
         # Update temporary piece with new information
-        piece.spot = chess_cpy.convertToBoardIndex(move)
+        piece.spot = boardCoords
         # Pawn exception
         if piece.piece == "pawn":
             piece.runcount += 1
@@ -376,7 +384,7 @@ def result(chess, action):
         indexBlackPlaces = chess_cpy.black_places.index(boardIndex)
 
         # Update temporary piece with new information
-        piece.spot = chess_cpy.convertToBoardIndex(move)
+        piece.spot = boardCoords
         # Pawn exception
         if piece.piece == "pawn":
             piece.runcount += 1
@@ -436,14 +444,19 @@ def material_score(chess):
     Returns total score of pieces per color
     """
 
+    # Determines factor of how far we are into game
+    total_pieces = len(chess.whites) + len(chess.blacks)
+    phaseFactor = 1 + ((32 - total_pieces) / 32)
+
     score = 0
 
+    # As we enter late game, rooks are more valuable
     piece_values = {
         "pawn": 1,
-        "rook": 5,
-        "knight": 4,
-        "bishop": 4,
-        "queen": 10
+        "rook": phaseFactor * 80,
+        "knight": 60,
+        "bishop": 60,
+        "queen": 200
     }
     pieces = piece_values.keys()
 
@@ -461,37 +474,147 @@ def material_score(chess):
 
     return score
 
-def manhattan_score(chess):
+
+def var_MD_score(chess):
     """
-    Returns total manhattan distance as score
+    Returns total score based on square values per piece
     """
 
-    score = 0
-    distance = [
-    [6, 5, 4, 3, 3, 4, 5, 6],
-    [5, 4, 3, 2, 2, 3, 4, 5],
-    [4, 3, 2, 1, 1, 2, 3, 4],
-    [3, 2, 1, 0, 0, 1, 2, 3],
-    [3, 2, 1, 0, 0, 1, 2, 3],
-    [4, 3, 2, 1, 1, 2, 3, 4],
-    [5, 4, 3, 2, 2, 3, 4, 5],
-    [6, 5, 4, 3, 3, 4, 5, 6]
-    ]
+    boards = {
+        # Pawn's require flip for white
+        "pawn" : [
+            [  0,  50,  10,   5,   0,   5,   5,   0],
+            [  0,  50,  10,   5,   0,  -5,  10,   0],
+            [  0,  50,  20,  10,   0, -10,  10,   0],
+            [  0,  50,  30,  25,  20,   0, -20,   0],
+            [  0,  50,  30,  25,  20,   0, -20,   0],
+            [  0,  50,  20,  10,   0, -10,  10,   0],
+            [  0,  50,  10,   5,   0,  -5,  10,   0],
+            [  0,  50,  10,   5,   0,   5,   5,   0]
+            ],
 
-    # Total White MD
-    for spot in chess.white_places:
-        x, y = spot
-        value = distance[x][y]
-        score += value
+        # Knights are uniform, no need for flip on white
+        "knight" : [
+            [-50, -40, -30, -30, -30, -30, -40, -50],
+            [-40, -20,   0,   5,   0,   5, -20, -40],
+            [-30,   0,  10,  15,  15,  10,   0, -30],
+            [-30,   0,  15,  20,  20,  15,   5, -30],
+            [-30,   0,  15,  20,  20,  15,   5, -30],
+            [-30,   0,  10,  15,  15,  10,   0, -30],
+            [-40, -20,   0,   5,   0,   5, -20, -40],
+            [-50, -40, -30, -30, -30, -30, -40, -50]
+        ],
 
-    # Total Black MD
-    for spot in chess.black_places:
-        x, y = spot
-        value = distance[x][y]
-        score -= value
+        # Bishops require flip for white
+        "bishop" : [
+            [-20, -10, -10, -10, -10, -10, -10, -20],
+            [-10,   0,   0,   5,   0,  10,   5, -10],
+            [-10,   0,   5,   5,  10,  10,   0, -10],
+            [-10,   0,  10,  10,  10,  10,   0, -10],
+            [-10,   0,  10,  10,  10,  10,   0, -10],
+            [-10,   0,   5,   5,  10,  10,   0, -10],
+            [-10,   0,   0,   5,   0,  10,   5, -10],
+            [-20, -10, -10, -10, -10, -10, -10, -20]
+        ],
 
-    return score
+        # Rooks require flip for white
+        "rook" : [
+            [ 0,  5, -5, -5, -5, -5, -5,  0],
+            [ 0, 10,  0,  0,  0,  0,  0,  0],
+            [ 0, 10,  0,  0,  0,  0,  0,  0],
+            [ 0, 10,  0,  0,  0,  0,  0,  5],
+            [ 0, 10,  0,  0,  0,  0,  0,  5],
+            [ 0, 10,  0,  0,  0,  0,  0,  0],
+            [ 0, 10,  0,  0,  0,  0,  0,  0],
+            [ 0,  5, -5, -5, -5, -5, -5,  0]
+        ],
 
+        # Queen requires flip for white
+        "queen" : [
+            [-20, -10, -10,  -5,  -5, -10, -10, -20],
+            [-10,   0,   0,   0,   0,   0,   0, -10],
+            [-10,   0,   5,   5,   5,   5,   0, -10],
+            [ -5,   0,   5,   5,   5,   5,   0,  -5],
+            [ -5,   0,   5,   5,   5,   5,   0,  -5],
+            [-10,   0,   5,   5,   5,   5,   5, -10],
+            [-10,   0,   0,   0,   0,   5,   0, -10],
+            [-20, -10, -10,  -5,   0, -10, -10, -20]
+        ],
+
+        # King requires flip for white
+        "king1" : [
+            [-30, -30, -30, -30, -20, -10,  20,  20],
+            [-40, -40, -40, -40, -30, -20,  20,  30],
+            [-40, -40, -40, -40, -30, -20,   0,  10],
+            [-50, -50, -50, -50, -40, -20,   0,   0],
+            [-50, -50, -50, -50, -40, -20,   0,   0],
+            [-40, -40, -40, -40, -30, -20,   0,  10],
+            [-40, -40, -40, -40, -30, -20,  20,  30],
+            [-30, -30, -30, -30, -20, -10,  20,  20]
+        ],
+
+        # King requires flip for white
+        "king2" : [
+            [-50, -30, -30, -30, -30, -30, -30, -50],
+            [-40, -20, -10, -10, -10, -10, -30, -30],
+            [-30, -10,  20,  30,  30,  20,   0, -30],
+            [-20,   0,  30,  40,  40,  30,   0, -30],
+            [-20,   0,  30,  40,  40,  30,   0, -30],
+            [-30, -10,  20,  30,  30,  20,   0, -30],
+            [-40, -20, -10, -10, -10, -10, -30, -30],
+            [-50, -30, -30, -30, -30, -30, -30, -50]
+        ]
+    }
+
+    # Determines factor of how far we are into game
+    total_pieces = len(chess.whites) + len(chess.blacks)
+    phaseFactor = (32 - total_pieces) / 32
+
+    # MidGame, remove both boards and keep king1
+    if phaseFactor < 0.66:
+        boardKing = boards["king1"]
+        boards.pop("king1")
+        boards.pop("king2")
+        boards["king"] = boardKing
+    # Late game, only keep king2
+    else:
+        boardKing = boards["king2"]
+        boards.pop("king1")
+        boards.pop("king2")
+        boards["king"] = boardKing
+
+
+    # Iterate boards for all pieces but kings
+    boardkeys = list(boards.keys())
+    black_score = 0
+    white_score = 0
+    for board in boardkeys[:5]:
+
+        # Find value per black piece
+        for black in chess.blacks:
+            # If we have the correct piece, get piece coords and find value
+            if black.piece == board:
+                x, y = black.spot
+                value = boards[board][x][y]
+                black_score += value
+
+        # Flip board for white
+        for row in boards[board]:
+            row = row[::-1]
+
+
+        # Find value per white piece
+        for white in chess.whites:
+            # If we have the correct piece, get piece coords and find value
+            if white.piece == board:
+                x, y = white.spot
+                value = boards[board][x][y]
+                white_score += value
+
+
+
+
+    return white_score - black_score
 
 def utility(chess):
     """
@@ -507,8 +630,10 @@ def utility(chess):
     elif player == "white":
         return 1000
 
-    # Pieces Heuristic: Whichever color has most pieces is rewarded
-    score += (manhattan_score(chess) + material_score(chess))
+    
+
+    # Heuristic
+    score += (var_MD_score(chess) + material_score(chess))
 
 
     return score

@@ -38,11 +38,13 @@ class ChessBoard:
         whites = copy.deepcopy(whitelist)
         blacks = copy.deepcopy(blacklist)
         for square in whites:
-            square.spot = square.spot.upper()
-            square.spot = (ord(square.spot[0]) - 65, int(square.spot[1]) - 1)
+            if not isinstance(square, tuple):
+                square.spot = square.spot.upper()
+                square.spot = (ord(square.spot[0]) - 65, int(square.spot[1]) - 1)
         for square in blacks:
-            square.spot = square.spot.upper()
-            square.spot = (ord(square.spot[0]) - 65, int(square.spot[1]) - 1)
+            if not isinstance(square, tuple):
+                square.spot = square.spot.upper()
+                square.spot = (ord(square.spot[0]) - 65, int(square.spot[1]) - 1)
 
         return whites, blacks
 
@@ -278,6 +280,8 @@ class Chesspiece:
                         if sublistcount > 1:
                             if place in Chesspiece.whitespotlist:
                                 potenspaces.append(place)
+
+
                         elif place not in Chesspiece.whitespotlist and place not in Chesspiece.blackspotlist:
                             potenspaces.append(place)
                         else:
@@ -483,7 +487,7 @@ def main():
 
 
     # Determine difficulty of AI (How far it will look into the future)
-    depth = input("Enter the AI difficulty (1-5): ")
+    depth = input("Enter the AI difficulty (1-5) - (Recommended is 3): ")
     if not depth.isdigit():
         while True:
             depth = input("Invalid option. Re-enter the AI difficulty (1-5): ")
@@ -525,8 +529,10 @@ def main():
                 AIAction = chessAI.minimax(chessboard, AIColor, depth)
                 piece, move  = AIAction
                 for item in Chesspiece.whiteobjlist:
-                    if item.spot == piece.spot:
+                    if item.spot == chessboard.convertToChessIndex(piece.spot):
                         break
+                # Convert move to chessIndex
+                move = chessboard.convertToChessIndex(move)
                 item.movepiece(move)
 
             else:
@@ -609,8 +615,11 @@ def main():
                 AIAction = chessAI.minimax(chessboard, AIColor, depth)
                 piece, move  = AIAction
                 for item in Chesspiece.blackobjlist:
-                    if item.spot == piece.spot:
+                    if item.spot == chessboard.convertToChessIndex(piece.spot):
                         break
+
+                # Convert move to chessIndex
+                move = chessboard.convertToChessIndex(move)
                 item.movepiece(move)
 
 
